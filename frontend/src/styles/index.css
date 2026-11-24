@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@layer base {
+  :root {
+    --bg-primary: #0b1020;
+    --bg-surface: #121a2b;
+    --bg-elevated: #172136;
+    --accent-blue: #6c9eff;
+    --accent-amber: #e5b66a;
+    --text-primary: #f4f6fb;
+    --text-secondary: #a8b3cf;
+    --border-subtle: rgba(148, 173, 224, 0.14);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: #0b1020;
+    color: #f4f6fb;
+    font-family: 'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #0b1020;
+    color: #f4f6fb;
+    overflow-x: hidden;
+  }
+
+  h1, .font-editorial {
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  }
+
+  h2, h3, h4, .font-ui {
+    font-family: 'Inter', 'Manrope', system-ui, sans-serif;
+  }
+
+  :focus-visible {
+    outline: 2px solid #6c9eff;
+    outline-offset: 2px;
+  }
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b1020;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #23314f;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #364b77;
+}
+
+/* MapLibre dark museum overrides */
+.maplibregl-popup-content {
+  background: #121a2b !important;
+  color: #f4f6fb !important;
+  border: 1px solid rgba(108, 158, 255, 0.25) !important;
+  border-radius: 14px !important;
+  padding: 16px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55) !important;
+  max-width: 310px !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: #121a2b !important;
+  border-bottom-color: #121a2b !important;
+}
+
+.maplibregl-popup-close-button {
+  color: #a8b3cf !important;
+  font-size: 18px !important;
+  padding: 4px 8px !important;
+}
+
+.maplibregl-ctrl-group {
+  background: #121a2b !important;
+  border: 1px solid rgba(148, 173, 224, 0.2) !important;
+  border-radius: 10px !important;
+}
+
+.maplibregl-ctrl-group button {
+  color: #f4f6fb !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgba(11, 16, 32, 0.78) !important;
+  color: #a8b3cf !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #6c9eff !important;
+}

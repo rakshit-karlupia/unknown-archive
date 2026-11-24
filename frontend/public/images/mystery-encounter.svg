@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#070B16"/>
+      <stop offset="55%" stop-color="#0B1020"/>
+      <stop offset="100%" stop-color="#121A2B"/>
+    </linearGradient>
+    <radialGradient id="blueGlow" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#6C9EFF" stop-opacity="0.30"/>
+      <stop offset="65%" stop-color="#1D3566" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0B1020" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="amberGlow" cx="62%" cy="55%" r="50%">
+      <stop offset="0%" stop-color="#E5B66A" stop-opacity="0.28"/>
+      <stop offset="60%" stop-color="#9A6B2F" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#0B1020" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#BFD6FF" stop-opacity="0.92"/>
+      <stop offset="45%" stop-color="#4E78C7" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#0E172E" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A2C50" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="#060A15" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="amberStone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E5B66A" stop-opacity="0.88"/>
+      <stop offset="55%" stop-color="#9B7238" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#1B2236" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="desertGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#27241D"/>
+      <stop offset="50%" stop-color="#1C1A16"/>
+      <stop offset="100%" stop-color="#101420"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg)"/>
+  <ellipse cx="600" cy="240" rx="460" ry="260" fill="url(#blueGlow)"/><circle cx="600" cy="185" r="24" fill="#9EC1FF" opacity="0.75"/><circle cx="240" cy="250" r="10" fill="#6C9EFF" opacity="0.45"/><circle cx="960" cy="250" r="10" fill="#6C9EFF" opacity="0.45"/><rect x="0" y="590" width="1200" height="160" fill="#070B16"/><ellipse cx="600" cy="605" rx="460" ry="42" fill="#6C9EFF" opacity="0.16"/><path d="M270,740 L310,410 Q360,360 440,360 Q515,360 550,415 L575,740 Z" fill="#050811"/><ellipse cx="420" cy="290" rx="52" ry="62" fill="#050811"/><ellipse cx="420" cy="255" rx="98" ry="16" fill="#050811" transform="rotate(-7 420 255)"/><path d="M368,250 Q420,185 472,250 Z" fill="#050811"/><path d="M445,255 Q495,295 452,360" fill="none" stroke="#6C9EFF" stroke-width="2" opacity="0.45"/><path d="M680,740 L710,425 Q765,375 835,375 Q905,375 945,425 L970,740 Z" fill="#050811"/><ellipse cx="825" cy="312" rx="48" ry="58" fill="#050811"/><ellipse cx="825" cy="278" rx="92" ry="14" fill="#050811" transform="rotate(6 825 278)"/><path d="M775,274 Q825,212 875,274 Z" fill="#050811"/><path d="M755,285 Q720,330 755,390" fill="none" stroke="#6C9EFF" stroke-width="1.6" opacity="0.35"/>
+</svg>

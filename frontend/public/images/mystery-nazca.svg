@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#070B16"/>
+      <stop offset="55%" stop-color="#0B1020"/>
+      <stop offset="100%" stop-color="#121A2B"/>
+    </linearGradient>
+    <radialGradient id="blueGlow" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#6C9EFF" stop-opacity="0.30"/>
+      <stop offset="65%" stop-color="#1D3566" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0B1020" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="amberGlow" cx="62%" cy="55%" r="50%">
+      <stop offset="0%" stop-color="#E5B66A" stop-opacity="0.28"/>
+      <stop offset="60%" stop-color="#9A6B2F" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#0B1020" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#BFD6FF" stop-opacity="0.92"/>
+      <stop offset="45%" stop-color="#4E78C7" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#0E172E" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A2C50" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="#060A15" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="amberStone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E5B66A" stop-opacity="0.88"/>
+      <stop offset="55%" stop-color="#9B7238" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#1B2236" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="desertGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#27241D"/>
+      <stop offset="50%" stop-color="#1C1A16"/>
+      <stop offset="100%" stop-color="#101420"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg)"/>
+  <line x1="120" y1="0" x2="120" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="240" y1="0" x2="240" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="360" y1="0" x2="360" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="480" y1="0" x2="480" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="600" y1="0" x2="600" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="720" y1="0" x2="720" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="840" y1="0" x2="840" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="960" y1="0" x2="960" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="1080" y1="0" x2="1080" y2="750" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="0" y1="120" x2="1200" y2="120" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="0" y1="240" x2="1200" y2="240" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="0" y1="360" x2="1200" y2="360" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="0" y1="480" x2="1200" y2="480" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="0" y1="600" x2="1200" y2="600" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/>
+  <line x1="0" y1="720" x2="1200" y2="720" stroke="#6C9EFF" stroke-width="0.6" opacity="0.04"/><ellipse cx="600" cy="375" rx="460" ry="260" fill="url(#amberGlow)"/><polygon points="180,580 560,180 650,180 1020,580" fill="none" stroke="#E5B66A" stroke-width="2.2" opacity="0.65"/><line x1="120" y1="380" x2="1080" y2="380" stroke="#E5B66A" stroke-width="1.5" opacity="0.5"/><path d="M520,380 Q580,290 640,380 T760,380" fill="none" stroke="#6C9EFF" stroke-width="2" opacity="0.6"/><circle cx="600" cy="380" r="110" fill="none" stroke="#E5B66A" stroke-width="1.4" stroke-dasharray="6 6" opacity="0.5"/>
+</svg>
