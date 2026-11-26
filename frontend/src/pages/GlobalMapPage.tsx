@@ -1,6 +1,8 @@
 import {
   ArrowRight,
+  Crosshair,
   Filter,
+  FolderKanban,
   Globe2,
   MapPin,
   Minus,
@@ -13,7 +15,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCategories, fetchMysteries } from '../api/client';
 import { EvidenceBadge } from '../components/EvidenceBadge';
-import { CATEGORIES, EVIDENCE_DEFINITIONS, MYSTERIES } from '../data';
+import { CATEGORIES, EVIDENCE_DEFINITIONS, MYSTERIES, getCategoryBySlug } from '../data';
 import { WORLD_COUNTRIES } from '../data/worldMapPaths';
 import type { CategoryInfo, EvidenceStatus, MysteryInvestigation } from '../types/archive';
 
@@ -29,7 +31,6 @@ interface ViewBox {
 
 const DEFAULT_VB: ViewBox = { x: 0, y: 0, w: BASE_W, h: BASE_H };
 
-// Equirectangular projection matching Natural Earth conversion: lng/lat -> SVG (x, y)
 function project(lat: number, lng: number): { x: number; y: number } {
   const x = ((lng + 180) / 360) * BASE_W;
   const y = ((90 - lat) / 180) * BASE_H;
@@ -61,17 +62,10 @@ const REGION_PRESETS: Array<{ label: string; vb: ViewBox }> = [
 ];
 
 const STATUS_COLOR: Record<EvidenceStatus, string> = {
-  VERIFIED: '#4ADE80',
+  VERIFIED: '#34D399',
   UNRESOLVED: '#6C9EFF',
-  DEBATED: '#E5B66A',
-  UNSUPPORTED: '#F87171',
-};
-
-const STATUS_LABELS: Record<EvidenceStatus, string> = {
-  VERIFIED: 'Confirmed evidence',
-  UNRESOLVED: 'Under investigation',
-  DEBATED: 'Contested claims',
-  UNSUPPORTED: 'No credible evidence',
+  DEBATED: '#D4A853',
+  UNSUPPORTED: '#E05252',
 };
 
 export function GlobalMapPage() {
@@ -80,7 +74,9 @@ export function GlobalMapPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | EvidenceStatus>('');
   const [search, setSearch] = useState('');
+  const [colorMode, setColorMode] = useState<'status' | 'category'>('status');
   const [selected, setSelected] = useState<MysteryInvestigation | null>(MYSTERIES[0]);
+  const [popupOpen, setPopupOpen] = useState(false);
   const [hovered, setHovered] = useState<MysteryInvestigation | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -118,6 +114,14 @@ export function GlobalMapPage() {
   }, [mysteries, categoryFilter, statusFilter, search]);
 
   const zoomScale = BASE_W / vb.w;
+
+  const getMarkerColor = (m: MysteryInvestigation) => {
+    if (colorMode === 'category') {
+      const cat = getCategoryBySlug(m.category);
+      return cat?.accentColor ?? '#D4A853';
+    }
+    return STATUS_COLOR[m.evidenceStatus];
+  };
 
   const zoomBy = (factor: number, centerX = vb.x + vb.w / 2, centerY = vb.y + vb.h / 2) => {
     setVb((prev) => {
@@ -170,10 +174,7 @@ export function GlobalMapPage() {
     dragStartRef.current = null;
   };
 
-  const handleDotHover = (
-    e: React.MouseEvent<SVGGElement>,
-    m: MysteryInvestigation
-  ) => {
+  const handleDotHover = (e: React.MouseEvent<SVGGElement>, m: MysteryInvestigation) => {
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
@@ -197,41 +198,51 @@ export function GlobalMapPage() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6C9EFF]">
-            Geospatial Investigation Atlas · Natural Earth Vector Projection
+          <span className="font-mono-archive text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D4A853]">
+            Geospatial Investigation Atlas // Natural Earth 110m
           </span>
           <h1 className="mt-2 font-editorial text-4xl font-semibold text-white sm:text-5xl">
             Global Mystery Map
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-[#A8B3CF]">
-            Accurate geographic coordinates of every investigation in the archive — scroll to
-            zoom, drag to pan, or jump to a region below.
+          <p className="mt-2 max-w-2xl text-sm text-[#9AA5BE]">
+            Verified archive coordinates across every dossier. Scroll to zoom, drag to pan, or
+            select any marker to inspect its case file.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-[#A8B3CF]">
-          {Object.entries(STATUS_LABELS).map(([status, label]) => (
-            <span key={status} className="inline-flex items-center gap-1.5">
-              <span
-                className="inline-block h-2.5 w-2.5 rounded-full ring-2 ring-[#0B1020]"
-                style={{ backgroundColor: STATUS_COLOR[status as EvidenceStatus] }}
-              />
-              {label}
-            </span>
-          ))}
+
+        <div className="inline-flex rounded-lg border border-white/12 bg-[#0F1420] p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setColorMode('status')}
+            className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+              colorMode === 'status' ? 'bg-[#1A2234] text-[#D4A853]' : 'text-[#9AA5BE] hover:text-white'
+            }`}
+          >
+            Color by Evidence
+          </button>
+          <button
+            type="button"
+            onClick={() => setColorMode('category')}
+            className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+              colorMode === 'category' ? 'bg-[#1A2234] text-[#D4A853]' : 'text-[#9AA5BE] hover:text-white'
+            }`}
+          >
+            Color by Category
+          </button>
         </div>
       </div>
 
       {/* Filters & Region Presets */}
-      <div className="mt-6 rounded-2xl border border-white/10 bg-[#121A2B] p-4 space-y-3">
+      <div className="mt-6 rounded-xl border border-white/10 bg-[#0F1420] p-4 space-y-3">
         <div className="grid gap-3 md:grid-cols-4">
           <div className="relative md:col-span-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A8B3CF]" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#D4A853]" />
             <input
               type="text"
-              placeholder="Search by name, location or region…"
+              placeholder="Search by investigation name, location, or region…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[#0B1020] py-2 pl-9 pr-4 text-sm text-white placeholder-[#4A5568] focus:border-[#6C9EFF]/60 focus:outline-none"
+              className="w-full rounded-lg border border-white/12 bg-[#080B12] py-2 pl-9 pr-4 text-sm text-white placeholder-[#68748F] focus:border-[#D4A853]/60 focus:outline-none"
             />
           </div>
 
@@ -239,7 +250,7 @@ export function GlobalMapPage() {
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             aria-label="Filter by category"
-            className="rounded-xl border border-white/10 bg-[#0B1020] px-3 py-2 text-sm text-white"
+            className="rounded-lg border border-white/12 bg-[#080B12] px-3 py-2 text-sm text-white"
           >
             <option value="">All Categories</option>
             {categories.map((c) => (
@@ -253,7 +264,7 @@ export function GlobalMapPage() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as '' | EvidenceStatus)}
             aria-label="Filter by evidence status"
-            className="rounded-xl border border-white/10 bg-[#0B1020] px-3 py-2 text-sm text-white"
+            className="rounded-lg border border-white/12 bg-[#080B12] px-3 py-2 text-sm text-white"
           >
             <option value="">All Classifications</option>
             <option value="VERIFIED">Verified</option>
@@ -265,7 +276,7 @@ export function GlobalMapPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#A8B3CF] mr-1">
+            <span className="font-mono-archive text-[10px] font-semibold uppercase tracking-wider text-[#9AA5BE] mr-1">
               Region:
             </span>
             {REGION_PRESETS.map((preset) => (
@@ -273,7 +284,7 @@ export function GlobalMapPage() {
                 key={preset.label}
                 type="button"
                 onClick={() => setVb(preset.vb)}
-                className="rounded-full border border-white/10 bg-[#0B1020] px-3 py-1 text-xs text-[#CBD6F0] hover:border-[#6C9EFF]/55 hover:text-white transition-colors"
+                className="rounded-md border border-white/10 bg-[#080B12] px-2.5 py-1 text-xs text-[#CBD5E1] hover:border-[#D4A853]/55 hover:text-white transition-colors"
               >
                 {preset.label}
               </button>
@@ -281,16 +292,15 @@ export function GlobalMapPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs text-[#A8B3CF]">
+            <span className="font-mono-archive inline-flex items-center gap-1.5 text-xs text-[#9AA5BE]">
               <Globe2 className="h-4 w-4 text-[#6C9EFF]" />
-              Showing <strong className="text-white">{visibleMysteries.length}</strong> of{' '}
-              {mysteries.length}
+              <strong className="text-white">{visibleMysteries.length}</strong> / {mysteries.length}
             </span>
             {hasFilters && (
               <button
                 type="button"
                 onClick={clearFilters}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#0B1020] px-3 py-1 text-xs text-[#A8B3CF] hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-[#080B12] px-2.5 py-1 text-xs text-[#D4A853] hover:text-white transition-colors"
               >
                 <X className="h-3 w-3" />
                 Clear
@@ -304,7 +314,7 @@ export function GlobalMapPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-12">
         {/* SVG World Map */}
         <div className="relative lg:col-span-8">
-          <div className="relative h-[520px] w-full overflow-hidden rounded-2xl border border-white/12 bg-[#060C1A] select-none">
+          <div className="relative h-[440px] sm:h-[540px] w-full overflow-hidden rounded-xl border border-white/12 bg-[#05080F] select-none">
             <svg
               ref={svgRef}
               viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
@@ -319,16 +329,9 @@ export function GlobalMapPage() {
             >
               <defs>
                 <radialGradient id="oceanGrad" cx="50%" cy="50%" r="80%">
-                  <stop offset="0%" stopColor="#0E1C38" />
-                  <stop offset="100%" stopColor="#060C1A" />
+                  <stop offset="0%" stopColor="#0C1322" />
+                  <stop offset="100%" stopColor="#05080F" />
                 </radialGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="2.5" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
               </defs>
 
               <rect x="0" y="0" width={BASE_W} height={BASE_H} fill="url(#oceanGrad)" />
@@ -343,7 +346,7 @@ export function GlobalMapPage() {
                     y1={y}
                     x2={BASE_W}
                     y2={y}
-                    stroke="#1A2744"
+                    stroke="#172033"
                     strokeWidth={(lat === 0 ? 1.0 : 0.5) / zoomScale}
                     strokeDasharray={lat === 0 ? undefined : `${4 / zoomScale} ${6 / zoomScale}`}
                   />
@@ -358,7 +361,7 @@ export function GlobalMapPage() {
                     y1="0"
                     x2={x}
                     y2={BASE_H}
-                    stroke="#1A2744"
+                    stroke="#172033"
                     strokeWidth={(lng === 0 ? 0.8 : 0.5) / zoomScale}
                     strokeDasharray={`${4 / zoomScale} ${6 / zoomScale}`}
                   />
@@ -370,8 +373,8 @@ export function GlobalMapPage() {
                 <path
                   key={`${country.name}-${idx}`}
                   d={country.d}
-                  fill={hoveredCountry === country.name ? '#1D2F4F' : '#152238'}
-                  stroke="#273C63"
+                  fill={hoveredCountry === country.name ? '#1C263B' : '#121927'}
+                  stroke="#273550"
                   strokeWidth={0.55 / zoomScale}
                   onMouseEnter={() => setHoveredCountry(country.name)}
                   onMouseLeave={() => setHoveredCountry(null)}
@@ -389,8 +392,8 @@ export function GlobalMapPage() {
                   x={vb.x + 8 / zoomScale}
                   y={((90 - lat) / 180) * BASE_H - 3 / zoomScale}
                   fontSize={9 / zoomScale}
-                  fill="#3B537A"
-                  fontFamily="system-ui"
+                  fill="#4A5D82"
+                  fontFamily="monospace"
                   pointerEvents="none"
                 >
                   {label}
@@ -400,7 +403,7 @@ export function GlobalMapPage() {
               {/* Mystery markers (scale-invariant size) */}
               {visibleMysteries.map((m) => {
                 const { x, y } = project(m.coordinates.lat, m.coordinates.lng);
-                const color = STATUS_COLOR[m.evidenceStatus];
+                const color = getMarkerColor(m);
                 const isSelected = selected?.slug === m.slug;
                 const isHovered = hovered?.slug === m.slug;
                 const baseR = (isSelected ? 6.5 : isHovered ? 5.5 : 4.2) / zoomScale;
@@ -413,6 +416,7 @@ export function GlobalMapPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelected(m);
+                      setPopupOpen(true);
                     }}
                     onMouseEnter={(e) => handleDotHover(e, m)}
                     onMouseLeave={() => setHovered(null)}
@@ -432,18 +436,11 @@ export function GlobalMapPage() {
                       cy={y}
                       r={baseR}
                       fill={color}
-                      stroke="#060C1A"
+                      stroke="#05080F"
                       strokeWidth={(isSelected ? 1.8 : 1.1) / zoomScale}
-                      filter={isSelected ? 'url(#glow)' : undefined}
                       pointerEvents="none"
                     />
-                    {/* Larger transparent hit target so markers are easy to click */}
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={11 / zoomScale}
-                      fill="transparent"
-                    />
+                    <circle cx={x} cy={y} r={11 / zoomScale} fill="transparent" />
                   </g>
                 );
               })}
@@ -455,7 +452,7 @@ export function GlobalMapPage() {
                 type="button"
                 onClick={() => zoomBy(1.45)}
                 aria-label="Zoom in"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-[#0B1020]/90 text-white hover:border-[#6C9EFF]/60 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-[#080B12]/90 text-white hover:border-[#D4A853]/60 transition-colors"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -463,7 +460,7 @@ export function GlobalMapPage() {
                 type="button"
                 onClick={() => zoomBy(1 / 1.45)}
                 aria-label="Zoom out"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-[#0B1020]/90 text-white hover:border-[#6C9EFF]/60 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-[#080B12]/90 text-white hover:border-[#D4A853]/60 transition-colors"
               >
                 <Minus className="h-4 w-4" />
               </button>
@@ -471,7 +468,7 @@ export function GlobalMapPage() {
                 type="button"
                 onClick={() => setVb(DEFAULT_VB)}
                 aria-label="Reset map zoom"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-[#0B1020]/90 text-[#A8B3CF] hover:text-white hover:border-[#6C9EFF]/60 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-[#080B12]/90 text-[#9AA5BE] hover:text-white hover:border-[#D4A853]/60 transition-colors"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
               </button>
@@ -479,7 +476,7 @@ export function GlobalMapPage() {
 
             {/* Country badge */}
             {hoveredCountry && !hovered && (
-              <div className="pointer-events-none absolute top-3 left-3 rounded-lg border border-white/10 bg-[#060C1A]/90 px-2.5 py-1 text-[11px] font-medium text-[#CBD6F0]">
+              <div className="font-mono-archive pointer-events-none absolute top-3 left-3 rounded-md border border-white/10 bg-[#080B12]/90 px-2.5 py-1 text-[11px] font-medium text-[#CBD5E1]">
                 {hoveredCountry}
               </div>
             )}
@@ -487,123 +484,190 @@ export function GlobalMapPage() {
             {/* Hover tooltip */}
             {hovered && (
               <div
-                className="pointer-events-none absolute z-20 w-56 rounded-xl border border-white/15 bg-[#0F1829]/95 p-3 shadow-xl backdrop-blur-sm"
+                className="pointer-events-none absolute z-20 w-56 rounded-lg border border-white/15 bg-[#0F1420]/95 p-3 shadow-xl backdrop-blur-sm"
                 style={{
                   left: Math.min(tooltipPos.x + 14, 520),
                   top: Math.max(tooltipPos.y - 65, 8),
                 }}
               >
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-[#E5B66A]">
+                <div className="font-mono-archive text-[10px] font-semibold uppercase tracking-widest text-[#D4A853]">
                   {hovered.evidenceStatus}
                 </div>
                 <div className="mt-0.5 text-sm font-semibold leading-snug text-white">
                   {hovered.title}
                 </div>
-                <div className="mt-0.5 text-[11px] text-[#A8B3CF] truncate">
+                <div className="mt-0.5 text-[11px] text-[#9AA5BE] truncate">
                   {hovered.locationName}
                 </div>
-                <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#6C9EFF]">
+                <div className="font-mono-archive mt-1 inline-flex items-center gap-1 text-[11px] text-[#6C9EFF]">
                   <MapPin className="h-3 w-3 shrink-0" />
-                  {hovered.coordinates.lat.toFixed(2)}°,{' '}
-                  {hovered.coordinates.lng.toFixed(2)}°
+                  {hovered.coordinates.lat.toFixed(2)}°, {hovered.coordinates.lng.toFixed(2)}°
+                </div>
+              </div>
+            )}
+
+            {/* Interactive Marker Popup Card */}
+            {popupOpen && selected && (
+              <div className="absolute bottom-3 left-3 z-20 w-72 sm:w-80 rounded-xl border border-[#D4A853]/40 bg-[#0F1420]/95 p-4 shadow-2xl backdrop-blur-md">
+                <div className="flex items-start justify-between gap-2">
+                  <EvidenceBadge status={selected.evidenceStatus} />
+                  <button
+                    type="button"
+                    onClick={() => setPopupOpen(false)}
+                    aria-label="Close popup"
+                    className="rounded p-1 text-[#9AA5BE] hover:bg-white/10 hover:text-white"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <h3 className="mt-2 font-editorial text-lg font-semibold text-white">
+                  {selected.title}
+                </h3>
+                <p className="font-mono-archive mt-0.5 text-[11px] text-[#D4A853]">
+                  {selected.locationName} · {selected.coordinates.lat.toFixed(2)}°,{' '}
+                  {selected.coordinates.lng.toFixed(2)}°
+                </p>
+                <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#CBD5E1]">
+                  {selected.summary}
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <Link
+                    to={`/investigation/${selected.slug}`}
+                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-[#D4A853] px-3 py-1.5 text-xs font-semibold text-[#080B12] hover:bg-[#e3ba68]"
+                  >
+                    Open Dossier
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVb(focusOnCoords(selected.coordinates.lat, selected.coordinates.lng, 4.2))
+                    }
+                    title="Center & zoom on marker"
+                    className="rounded-md border border-white/15 bg-[#080B12] p-1.5 text-[#CBD5E1] hover:border-[#D4A853]"
+                  >
+                    <Crosshair className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
             )}
 
             {/* Map legend & zoom level */}
-            <div className="absolute bottom-3 right-3 rounded-xl border border-white/10 bg-[#060C1A]/90 px-3 py-2 backdrop-blur-sm">
-              <div className="mb-1 flex items-center justify-between gap-3 text-[9px] font-semibold uppercase tracking-widest text-[#6E7A94]">
-                <span>Evidence</span>
+            <div className="absolute bottom-3 right-3 rounded-lg border border-white/10 bg-[#080B12]/90 px-3 py-2 backdrop-blur-sm">
+              <div className="font-mono-archive mb-1 flex items-center justify-between gap-3 text-[9px] font-semibold uppercase tracking-widest text-[#68748F]">
+                <span>{colorMode === 'status' ? 'Evidence' : 'Category'}</span>
                 <span>{zoomScale.toFixed(1)}×</span>
               </div>
-              {(Object.entries(STATUS_COLOR) as [EvidenceStatus, string][]).map(
-                ([status, color]) => (
-                  <div key={status} className="flex items-center gap-2 text-[10px] text-[#A8B3CF]">
-                    <span
-                      className="inline-block h-2 w-2 rounded-full"
-                      style={{ backgroundColor: color }}
-                    />
-                    {status}
-                  </div>
+              {colorMode === 'status' ? (
+                (Object.entries(STATUS_COLOR) as [EvidenceStatus, string][]).map(
+                  ([status, color]) => (
+                    <div key={status} className="flex items-center gap-2 text-[10px] text-[#9AA5BE]">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                      {status}
+                    </div>
+                  )
                 )
+              ) : (
+                <div className="text-[10px] text-[#9AA5BE]">
+                  Colored by 12 research divisions
+                </div>
               )}
             </div>
           </div>
 
-          <p className="mt-2 text-center text-[11px] text-[#6E7A94]">
-            Scroll to zoom · Drag to pan · Click any marker or directory entry to inspect coordinates
+          <p className="font-mono-archive mt-2 text-center text-[11px] text-[#68748F]">
+            Scroll to zoom · Drag to pan · Click any marker or directory entry to inspect
           </p>
         </div>
 
         {/* Right sidebar */}
         <aside className="lg:col-span-4 flex flex-col gap-4">
           {selected && (
-            <div className="rounded-2xl border border-[#6C9EFF]/30 bg-[#121A2B] p-5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#E5B66A]">
-                  Selected Investigation
-                </span>
-                <EvidenceBadge status={selected.evidenceStatus} />
+            <div className="overflow-hidden rounded-xl border border-[#D4A853]/35 bg-[#0F1420]">
+              <div className="relative h-36 bg-[#080B12]">
+                <img
+                  src={selected.heroImage}
+                  alt={selected.imageAlt}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0F1420] via-transparent to-transparent" />
               </div>
-              <h2 className="mt-2 font-editorial text-xl font-semibold leading-snug text-white">
-                {selected.title}
-              </h2>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-[#6C9EFF]">
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
-                {selected.coordinates.precisionLabel} ({selected.coordinates.lat.toFixed(2)}°,{' '}
-                {selected.coordinates.lng.toFixed(2)}°)
-              </p>
-              <p className="mt-3 text-xs leading-relaxed text-[#CBD6F0] line-clamp-4">
-                {selected.summary}
-              </p>
-              <Link
-                to={`/investigation/${selected.slug}`}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#E5B66A] px-4 py-2.5 text-xs font-semibold text-[#0B1020] hover:opacity-90 transition-opacity"
-              >
-                Open Full Investigation
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="p-5 -mt-4 relative">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono-archive text-[10px] font-semibold uppercase tracking-wider text-[#D4A853]">
+                    Selected Investigation
+                  </span>
+                  <EvidenceBadge status={selected.evidenceStatus} />
+                </div>
+                <h2 className="mt-2 font-editorial text-2xl font-semibold leading-snug text-white">
+                  {selected.title}
+                </h2>
+                <p className="font-mono-archive mt-1 inline-flex items-center gap-1.5 text-[11px] text-[#6C9EFF]">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  {selected.coordinates.precisionLabel} ({selected.coordinates.lat.toFixed(2)}°,{' '}
+                  {selected.coordinates.lng.toFixed(2)}°)
+                </p>
+                <p className="mt-3 text-xs leading-relaxed text-[#CBD5E1] line-clamp-3">
+                  {selected.summary}
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <Link
+                    to={`/investigation/${selected.slug}`}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#D4A853] px-3 py-2.5 text-xs font-semibold text-[#080B12] hover:bg-[#e3ba68] transition-colors"
+                  >
+                    Open Dossier
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                  <Link
+                    to={`/investigation-room?case=${selected.slug}`}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-[#080B12] px-3 py-2.5 text-xs font-medium text-[#CBD5E1] hover:border-[#D4A853]/50 hover:text-white"
+                  >
+                    <FolderKanban className="h-3.5 w-3.5 text-[#D4A853]" />
+                    Board
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
 
           {/* Coordinate directory */}
-          <div className="flex-1 overflow-hidden rounded-2xl border border-white/10 bg-[#121A2B]">
+          <div className="flex-1 overflow-hidden rounded-xl border border-white/10 bg-[#0F1420]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#A8B3CF]">
-                <Filter className="inline h-3.5 w-3.5 mr-1 text-[#6C9EFF]" />
+              <span className="font-mono-archive text-[11px] font-semibold uppercase tracking-wider text-[#9AA5BE]">
+                <Filter className="inline h-3.5 w-3.5 mr-1 text-[#D4A853]" />
                 Coordinate Directory
               </span>
-              <span className="rounded-full bg-[#6C9EFF]/15 px-2 py-0.5 text-[10px] font-semibold text-[#6C9EFF]">
+              <span className="font-mono-archive rounded bg-[#D4A853]/15 px-2 py-0.5 text-[10px] font-semibold text-[#D4A853]">
                 {visibleMysteries.length}
               </span>
             </div>
-            <ul className="max-h-[320px] overflow-y-auto divide-y divide-white/5">
+            <ul className="max-h-[300px] overflow-y-auto divide-y divide-white/5">
               {visibleMysteries.map((m) => (
                 <li key={m.slug}>
                   <button
                     type="button"
                     onClick={() => {
                       setSelected(m);
+                      setPopupOpen(true);
                       setVb(focusOnCoords(m.coordinates.lat, m.coordinates.lng, Math.max(zoomScale, 3.2)));
                     }}
-                    className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition-colors hover:bg-white/5 ${
-                      selected?.slug === m.slug ? 'bg-[#18233C]' : ''
+                    className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition-colors hover:bg-white/[0.04] ${
+                      selected?.slug === m.slug ? 'bg-[#161D2D]' : ''
                     }`}
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-xs font-semibold text-white">
-                        {m.title}
-                      </div>
-                      <div className="truncate text-[11px] text-[#A8B3CF]">
-                        {m.coordinates.lat.toFixed(2)}°,{' '}
-                        {m.coordinates.lng.toFixed(2)}° · {m.region}
+                      <div className="truncate text-xs font-semibold text-white">{m.title}</div>
+                      <div className="font-mono-archive truncate text-[10px] text-[#9AA5BE]">
+                        {m.coordinates.lat.toFixed(2)}°, {m.coordinates.lng.toFixed(2)}° · {m.region}
                       </div>
                     </div>
                     <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-[#0B1020]"
+                      className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-[#080B12]"
                       style={{
-                        backgroundColor:
-                          EVIDENCE_DEFINITIONS[m.evidenceStatus].dotColor,
+                        backgroundColor: EVIDENCE_DEFINITIONS[m.evidenceStatus].dotColor,
                       }}
                     />
                   </button>

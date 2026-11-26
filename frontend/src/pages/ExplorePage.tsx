@@ -1,10 +1,20 @@
-import { ArrowRight, LayoutGrid, List, RotateCcw, Search, Star } from 'lucide-react';
+import {
+  ArrowRight,
+  Bookmark,
+  LayoutGrid,
+  List,
+  RotateCcw,
+  Search,
+  SearchX,
+  Star,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { fetchCategories, fetchMysteries } from '../api/client';
 import { EvidenceBadge } from '../components/EvidenceBadge';
 import { MysteryCard } from '../components/MysteryCard';
 import { CATEGORIES, EVIDENCE_DEFINITIONS, MYSTERIES } from '../data';
+import { useBookmarks } from '../hooks/useBookmarks';
 import type { CategoryInfo, EvidenceStatus, MysteryInvestigation } from '../types/archive';
 
 const EVIDENCE_OPTIONS: Array<{ value: '' | EvidenceStatus; label: string }> = [
@@ -21,6 +31,7 @@ export function ExplorePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [mysteries, setMysteries] = useState<MysteryInvestigation[]>(MYSTERIES);
   const [categories, setCategories] = useState<CategoryInfo[]>(CATEGORIES);
+  const { bookmarks } = useBookmarks();
 
   const [query, setQuery] = useState(searchParams.get('q') ?? '');
   const [category, setCategory] = useState(searchParams.get('category') ?? '');
@@ -28,7 +39,10 @@ export function ExplorePage() {
     (searchParams.get('status') as '' | EvidenceStatus) ?? ''
   );
   const [region, setRegion] = useState(searchParams.get('region') ?? '');
-  const [sortBy, setSortBy] = useState<'popular' | 'recent'>('popular');
+  const [onlyBookmarked, setOnlyBookmarked] = useState(false);
+  const [sortBy, setSortBy] = useState<'popular' | 'recent' | 'title'>(
+    (searchParams.get('sort') as 'popular' | 'recent' | 'title') ?? 'popular'
+  );
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
 
@@ -49,7 +63,7 @@ export function ExplorePage() {
 
   useEffect(() => {
     setVisibleLimit(PAGE_SIZE);
-  }, [query, category, evidenceStatus, region, sortBy]);
+  }, [query, category, evidenceStatus, region, sortBy, onlyBookmarked]);
 
   const regions = useMemo(
     () => Array.from(new Set(mysteries.map((m) => m.region))).sort(),
@@ -59,8 +73,9 @@ export function ExplorePage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = mysteries.filter((m) => {
+      if (onlyBookmarked && !bookmarks.includes(m.slug)) return false;
       if (q) {
-        const hay = `${m.title} ${m.subtitle} ${m.summary} ${m.locationName}`.toLowerCase();
+        const hay = `${m.title} ${m.subtitle} ${m.summary} ${m.locationName} ${m.region}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (
@@ -77,11 +92,12 @@ export function ExplorePage() {
 
     return [...list].sort((a, b) => {
       if (sortBy === 'recent') return b.updatedAt.localeCompare(a.updatedAt);
+      if (sortBy === 'title') return a.title.localeCompare(b.title);
       return b.popularityScore - a.popularityScore;
     });
-  }, [mysteries, query, category, evidenceStatus, region, sortBy]);
+  }, [mysteries, query, category, evidenceStatus, region, sortBy, onlyBookmarked, bookmarks]);
 
-  const hasActiveFilter = Boolean(query || category || evidenceStatus || region);
+  const hasActiveFilter = Boolean(query || category || evidenceStatus || region || onlyBookmarked);
   const displayed = hasActiveFilter ? filtered : filtered.slice(0, visibleLimit);
 
   const spotlight =
@@ -92,6 +108,7 @@ export function ExplorePage() {
     setCategory('');
     setEvidenceStatus('');
     setRegion('');
+    setOnlyBookmarked(false);
     setSortBy('popular');
     setSearchParams({});
   };
@@ -100,54 +117,53 @@ export function ExplorePage() {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="max-w-3xl">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6C9EFF]">
-          Investigative Index
+        <span className="font-mono-archive text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D4A853]">
+          Investigative Case Index // {mysteries.length} Files
         </span>
         <h1 className="mt-2 font-editorial text-4xl font-semibold text-white sm:text-5xl">
           Explore Mysteries
         </h1>
-        <p className="mt-3 text-base leading-relaxed text-[#CBD6F0]">
-          Browse {mysteries.length} structured dossiers across secret operations, time anomalies,
-          secret societies, unsolved disappearances, and science. Click any category or rating pill
-          below to filter instantly.
+        <p className="mt-3 text-base leading-relaxed text-[#CBD5E1]">
+          Search and filter {mysteries.length} structured dossiers across classified operations,
+          time anomalies, secret societies, unsolved disappearances, and science.
         </p>
       </div>
 
       {/* Featured Spotlight */}
       {spotlight && !hasActiveFilter && (
-        <section className="mt-9 overflow-hidden rounded-2xl border border-white/12 bg-[#121A2B]">
+        <section className="mt-9 overflow-hidden rounded-xl border border-white/12 bg-[#0F1420]">
           <div className="grid lg:grid-cols-12">
-            <div className="relative lg:col-span-5 min-h-[230px]">
+            <div className="relative lg:col-span-5 min-h-[230px] bg-[#080B12]">
               <img
                 src={spotlight.heroImage}
                 alt={spotlight.imageAlt}
                 className="h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#121A2B]/90 hidden lg:block" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0F1420]/95 hidden lg:block" />
             </div>
             <div className="flex flex-col justify-center p-7 sm:p-9 lg:col-span-7">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E5B66A]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#E5B66A]">
+                <span className="font-mono-archive inline-flex items-center gap-1.5 rounded-md border border-[#D4A853]/35 bg-[#D4A853]/12 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#D4A853]">
                   <Star className="h-3.5 w-3.5" aria-hidden="true" />
-                  Featured Spotlight
+                  Featured Case File
                 </span>
                 <EvidenceBadge status={spotlight.evidenceStatus} showPlainLabel />
               </div>
-              <h2 className="mt-4 text-2xl sm:text-3xl font-bold text-white">
+              <h2 className="mt-4 font-editorial text-2xl sm:text-3xl font-semibold text-white">
                 {spotlight.title}
               </h2>
-              <p className="mt-2 text-[15px] leading-relaxed text-[#D8E2F6]">
+              <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-[#CBD5E1]">
                 {spotlight.summary}
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-4">
                 <Link
                   to={`/investigation/${spotlight.slug}`}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#6C9EFF] px-5 py-2.5 text-sm font-semibold text-[#0B1020] hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#D4A853] px-5 py-2.5 text-sm font-semibold text-[#080B12] hover:bg-[#e3ba68] transition-colors"
                 >
                   Open Investigation
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-                <span className="text-xs text-[#B8C4E0]">
+                <span className="font-mono-archive text-xs text-[#9AA5BE]">
                   {spotlight.locationName} · {spotlight.readingTimeMinutes} min read
                 </span>
               </div>
@@ -162,10 +178,10 @@ export function ExplorePage() {
           <button
             type="button"
             onClick={() => setCategory('')}
-            className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+            className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${
               category === ''
-                ? 'border-[#E5B66A] bg-[#E5B66A] text-[#0B1020]'
-                : 'border-white/12 bg-[#121A2B] text-[#CBD6F0] hover:border-[#6C9EFF]/50 hover:text-white'
+                ? 'border-[#D4A853] bg-[#D4A853] text-[#080B12]'
+                : 'border-white/12 bg-[#0F1420] text-[#CBD5E1] hover:border-[#D4A853]/50 hover:text-white'
             }`}
           >
             All Categories ({mysteries.length})
@@ -177,10 +193,10 @@ export function ExplorePage() {
                 key={c.slug}
                 type="button"
                 onClick={() => setCategory(active ? '' : c.slug)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                   active
-                    ? 'border-[#6C9EFF] bg-[#6C9EFF] text-[#0B1020] font-semibold'
-                    : 'border-white/12 bg-[#121A2B] text-[#CBD6F0] hover:border-[#6C9EFF]/50 hover:text-white'
+                    ? 'border-[#6C9EFF] bg-[#6C9EFF] text-[#080B12] font-semibold'
+                    : 'border-white/12 bg-[#0F1420] text-[#CBD5E1] hover:border-[#6C9EFF]/50 hover:text-white'
                 }`}
               >
                 {c.number}. {c.name}
@@ -189,10 +205,10 @@ export function ExplorePage() {
           })}
         </div>
 
-        {/* Quick Evidence Rating Pills */}
+        {/* Quick Evidence Rating Pills + Bookmark Filter */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#B8C4E0] mr-1">
-            Evidence Rating:
+          <span className="font-mono-archive text-[11px] font-semibold uppercase tracking-wider text-[#9AA5BE] mr-1">
+            Classification:
           </span>
           {EVIDENCE_OPTIONS.map((opt) => {
             const active = evidenceStatus === opt.value;
@@ -202,10 +218,10 @@ export function ExplorePage() {
                 key={opt.label}
                 type="button"
                 onClick={() => setEvidenceStatus(opt.value)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
                   active
-                    ? 'border-[#E5B66A] bg-[#E5B66A]/15 text-[#E5B66A]'
-                    : 'border-white/10 bg-[#0B1020] text-[#B8C4E0] hover:border-white/25 hover:text-white'
+                    ? 'border-[#D4A853] bg-[#D4A853]/15 text-[#D4A853]'
+                    : 'border-white/10 bg-[#080B12] text-[#9AA5BE] hover:border-white/25 hover:text-white'
                 }`}
               >
                 {dot && (
@@ -219,27 +235,40 @@ export function ExplorePage() {
               </button>
             );
           })}
+
+          <button
+            type="button"
+            onClick={() => setOnlyBookmarked((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+              onlyBookmarked
+                ? 'border-[#D4A853] bg-[#D4A853]/15 text-[#D4A853]'
+                : 'border-white/10 bg-[#080B12] text-[#9AA5BE] hover:border-white/25 hover:text-white'
+            }`}
+          >
+            <Bookmark className={`h-3 w-3 ${onlyBookmarked ? 'fill-current' : ''}`} />
+            Saved ({bookmarks.length})
+          </button>
         </div>
       </section>
 
       {/* Filter & Controls Toolbar */}
       <section
         aria-label="Search and sort mysteries"
-        className="mt-5 rounded-2xl border border-white/10 bg-[#121A2B] p-4 sm:p-5"
+        className="mt-5 rounded-xl border border-white/10 bg-[#0F1420] p-4 sm:p-5"
       >
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <div className="relative lg:col-span-2">
             <Search
-              className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#6C9EFF]"
+              className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#D4A853]"
               aria-hidden="true"
             />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by mystery name, location, or keyword (e.g., Area 51, Titor, Roanoke)..."
+              placeholder="Filter by title, location, region, or keyword (e.g., Area 51, Titor, Roanoke)..."
               aria-label="Search mysteries by title or location"
-              className="w-full rounded-xl border border-white/12 bg-[#0B1020] py-2.5 pr-3 pl-10 text-sm text-white placeholder-[#7D89A8] focus:border-[#6C9EFF] focus:outline-none"
+              className="w-full rounded-lg border border-white/12 bg-[#080B12] py-2.5 pr-3 pl-10 text-sm text-white placeholder-[#68748F] focus:border-[#D4A853] focus:outline-none"
             />
           </div>
 
@@ -247,7 +276,7 @@ export function ExplorePage() {
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             aria-label="Filter by geographical region"
-            className="rounded-xl border border-white/12 bg-[#0B1020] px-3 py-2.5 text-sm text-white focus:border-[#6C9EFF] focus:outline-none"
+            className="rounded-lg border border-white/12 bg-[#080B12] px-3 py-2.5 text-sm text-white focus:border-[#D4A853] focus:outline-none"
           >
             <option value="">All Regions</option>
             {regions.map((r) => (
@@ -259,41 +288,42 @@ export function ExplorePage() {
 
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'popular' | 'recent')}
+            onChange={(e) => setSortBy(e.target.value as 'popular' | 'recent' | 'title')}
             aria-label="Sort investigations"
-            className="rounded-xl border border-white/12 bg-[#0B1020] px-3 py-2.5 text-sm text-white focus:border-[#6C9EFF] focus:outline-none"
+            className="rounded-lg border border-white/12 bg-[#080B12] px-3 py-2.5 text-sm text-white focus:border-[#D4A853] focus:outline-none"
           >
             <option value="popular">Sort: Most Explored</option>
             <option value="recent">Sort: Recently Updated</option>
+            <option value="title">Sort: Alphabetical (A–Z)</option>
           </select>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-3.5 text-xs">
-          <div className="flex items-center gap-3 text-[#CBD6F0]">
-            <span>
-              Showing <strong className="text-white">{displayed.length}</strong> of{' '}
-              <strong className="text-white">{filtered.length}</strong> matching dossiers
+          <div className="flex items-center gap-3 text-[#CBD5E1]">
+            <span className="font-mono-archive">
+              SHOWING <strong className="text-white">{displayed.length}</strong> /{' '}
+              <strong className="text-white">{filtered.length}</strong> MATCHING FILES
             </span>
             {hasActiveFilter && (
               <button
                 type="button"
                 onClick={resetFilters}
-                className="inline-flex items-center gap-1 font-semibold text-[#E5B66A] hover:underline"
+                className="inline-flex items-center gap-1 font-semibold text-[#D4A853] hover:underline"
               >
                 <RotateCcw className="h-3 w-3" />
-                Reset filters
+                Clear all filters
               </button>
             )}
           </div>
 
-          <div className="inline-flex rounded-lg border border-white/12 bg-[#0B1020] p-0.5">
+          <div className="inline-flex rounded-lg border border-white/12 bg-[#080B12] p-0.5">
             <button
               type="button"
               onClick={() => setLayout('grid')}
               aria-label="Grid view"
               aria-pressed={layout === 'grid'}
               className={`rounded-md p-1.5 transition-colors ${
-                layout === 'grid' ? 'bg-[#1A2642] text-[#6C9EFF]' : 'text-[#A8B3CF]'
+                layout === 'grid' ? 'bg-[#171F31] text-[#D4A853]' : 'text-[#9AA5BE]'
               }`}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -304,7 +334,7 @@ export function ExplorePage() {
               aria-label="List view"
               aria-pressed={layout === 'list'}
               className={`rounded-md p-1.5 transition-colors ${
-                layout === 'list' ? 'bg-[#1A2642] text-[#6C9EFF]' : 'text-[#A8B3CF]'
+                layout === 'list' ? 'bg-[#171F31] text-[#D4A853]' : 'text-[#9AA5BE]'
               }`}
             >
               <List className="h-4 w-4" />
@@ -315,18 +345,37 @@ export function ExplorePage() {
 
       {/* Results */}
       {filtered.length === 0 ? (
-        <div className="mt-12 rounded-2xl border border-white/10 bg-[#121A2B] p-12 text-center">
-          <h3 className="text-2xl font-bold text-white">No matching investigations found</h3>
-          <p className="mt-2 text-sm text-[#B8C4E0]">
-            Try clearing one or more filters or broadening your search keyword.
+        <div className="mt-12 rounded-xl border border-white/10 bg-[#0F1420] p-12 text-center">
+          <SearchX className="mx-auto h-10 w-10 text-[#E05252]" aria-hidden="true" />
+          <h3 className="mt-3 font-editorial text-2xl font-semibold text-white">
+            No Matching Case Files Found
+          </h3>
+          <p className="mt-2 max-w-md mx-auto text-sm text-[#9AA5BE]">
+            No dossiers matched your current combination of search terms, region, or evidence
+            classification filters.
           </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {['Area 51', 'Somerton Man', 'MKUltra', 'Voynich'].map((term) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => {
+                  resetFilters();
+                  setQuery(term);
+                }}
+                className="rounded-md border border-white/12 bg-[#080B12] px-3 py-1.5 text-xs text-[#CBD5E1] hover:border-[#D4A853]/50 hover:text-white"
+              >
+                Try &ldquo;{term}&rdquo;
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={resetFilters}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#6C9EFF] px-5 py-2.5 text-sm font-semibold text-[#0B1020]"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#D4A853] px-5 py-2.5 text-sm font-semibold text-[#080B12]"
           >
             <RotateCcw className="h-4 w-4" />
-            Show all {mysteries.length} investigations
+            Reset &amp; Show All {mysteries.length} Files
           </button>
         </div>
       ) : (
@@ -350,14 +399,14 @@ export function ExplorePage() {
               <button
                 type="button"
                 onClick={() => setVisibleLimit((v) => v + PAGE_SIZE)}
-                className="rounded-xl border border-[#6C9EFF]/45 bg-[#121A2B] px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-[#6C9EFF] hover:bg-[#18243C]"
+                className="rounded-lg border border-[#D4A853]/45 bg-[#0F1420] px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-[#D4A853] hover:bg-[#151C2C]"
               >
                 Load {Math.min(PAGE_SIZE, filtered.length - visibleLimit)} More Dossiers
               </button>
               <button
                 type="button"
                 onClick={() => setVisibleLimit(filtered.length)}
-                className="rounded-xl border border-white/12 bg-[#0B1020] px-5 py-3 text-sm font-medium text-[#E5B66A] hover:border-[#E5B66A]/45"
+                className="rounded-lg border border-white/12 bg-[#080B12] px-5 py-3 text-sm font-medium text-[#D4A853] hover:border-[#D4A853]/45"
               >
                 Show All ({filtered.length})
               </button>

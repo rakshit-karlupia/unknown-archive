@@ -3,28 +3,33 @@
 
 @layer base {
   :root {
-    --bg-primary: #0b1020;
-    --bg-surface: #121a2b;
-    --bg-elevated: #172136;
-    --accent-blue: #6c9eff;
+    --bg-primary: #080b12;
+    --bg-surface: #0f1420;
+    --bg-elevated: #161d2d;
+    --bg-panel: rgba(15, 20, 32, 0.85);
+    --accent-gold: #d4a853;
     --accent-amber: #e5b66a;
-    --text-primary: #f4f6fb;
-    --text-secondary: #a8b3cf;
-    --border-subtle: rgba(148, 173, 224, 0.14);
+    --accent-blue: #6c9eff;
+    --accent-red: #e05252;
+    --text-primary: #f1f4f9;
+    --text-secondary: #9aa5be;
+    --text-muted: #68748f;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-gold: rgba(212, 168, 83, 0.25);
   }
 
   html {
     scroll-behavior: smooth;
-    background-color: #0b1020;
-    color: #f4f6fb;
+    background-color: #080b12;
+    color: #f1f4f9;
     font-family: 'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
   }
 
   body {
     margin: 0;
     min-height: 100vh;
-    background-color: #0b1020;
-    color: #f4f6fb;
+    background-color: #080b12;
+    color: #f1f4f9;
     overflow-x: hidden;
   }
 
@@ -36,68 +41,115 @@
     font-family: 'Inter', 'Manrope', system-ui, sans-serif;
   }
 
+  .font-mono-archive {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
   :focus-visible {
-    outline: 2px solid #6c9eff;
+    outline: 2px solid #d4a853;
     outline-offset: 2px;
+  }
+}
+
+/* Subtle archival grid & scanline utilities */
+.archive-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.archive-panel {
+  background: linear-gradient(180deg, rgba(18, 24, 38, 0.92) 0%, rgba(12, 16, 26, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.archive-panel-glass {
+  background: rgba(13, 18, 30, 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+@keyframes subtle-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+.animate-subtle-drift {
+  animation: subtle-drift 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-subtle-drift,
+  .animate-pulse,
+  .animate-ping {
+    animation: none !important;
   }
 }
 
 /* Custom subtle scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b1020;
+  background: #080b12;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #23314f;
-  border-radius: 9999px;
+  background: #20293d;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #364b77;
+  background: #33415f;
 }
 
 /* MapLibre dark museum overrides */
 .maplibregl-popup-content {
-  background: #121a2b !important;
-  color: #f4f6fb !important;
-  border: 1px solid rgba(108, 158, 255, 0.25) !important;
-  border-radius: 14px !important;
+  background: #0f1420 !important;
+  color: #f1f4f9 !important;
+  border: 1px solid rgba(212, 168, 83, 0.28) !important;
+  border-radius: 10px !important;
   padding: 16px !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.65) !important;
   max-width: 310px !important;
 }
 
 .maplibregl-popup-tip {
-  border-top-color: #121a2b !important;
-  border-bottom-color: #121a2b !important;
+  border-top-color: #0f1420 !important;
+  border-bottom-color: #0f1420 !important;
 }
 
 .maplibregl-popup-close-button {
-  color: #a8b3cf !important;
+  color: #9aa5be !important;
   font-size: 18px !important;
   padding: 4px 8px !important;
 }
 
 .maplibregl-ctrl-group {
-  background: #121a2b !important;
-  border: 1px solid rgba(148, 173, 224, 0.2) !important;
-  border-radius: 10px !important;
+  background: #0f1420 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
 }
 
 .maplibregl-ctrl-group button {
-  color: #f4f6fb !important;
+  color: #f1f4f9 !important;
 }
 
 .maplibregl-ctrl-attrib {
-  background: rgba(11, 16, 32, 0.78) !important;
-  color: #a8b3cf !important;
+  background: rgba(8, 11, 18, 0.82) !important;
+  color: #9aa5be !important;
 }
 
 .maplibregl-ctrl-attrib a {
-  color: #6c9eff !important;
+  color: #d4a853 !important;
 }

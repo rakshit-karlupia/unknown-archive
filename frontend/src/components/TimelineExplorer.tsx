@@ -1,18 +1,36 @@
-import { Calendar, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import {
+  AlertTriangle,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Shuffle,
+} from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { TimelineEvent } from '../types/archive';
 
 interface TimelineExplorerProps {
   events: TimelineEvent[];
   mysteryTitle: string;
+  mysterySlug?: string;
 }
 
-export function TimelineExplorer({ events, mysteryTitle }: TimelineExplorerProps) {
+function isApproximateDate(label: string): boolean {
+  return /[–\-~?]|c\.|circa|ma\b|century|bce|bc\b|approx|or\b/i.test(label);
+}
+
+export function TimelineExplorer({
+  events,
+  mysteryTitle,
+  mysterySlug,
+}: TimelineExplorerProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (events.length === 0) return null;
 
   const active = events[activeIndex] ?? events[0];
+  const uncertain = isApproximateDate(active.yearLabel);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-[#0E1527] p-6">
@@ -25,7 +43,16 @@ export function TimelineExplorer({ events, mysteryTitle }: TimelineExplorerProps
             Timeline Explorer — {mysteryTitle}
           </h4>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {mysterySlug && (
+            <Link
+              to={`/investigation-room?case=${mysterySlug}&section=timeline`}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#D4A853]/40 bg-[#D4A853]/12 px-3 py-1.5 text-xs font-semibold text-[#D4A853] hover:bg-[#D4A853]/20"
+            >
+              <Shuffle className="h-3.5 w-3.5" />
+              Reconstruct in Room
+            </Link>
+          )}
           <button
             type="button"
             disabled={activeIndex === 0}
@@ -79,10 +106,18 @@ export function TimelineExplorer({ events, mysteryTitle }: TimelineExplorerProps
       {/* Active milestone detail */}
       <div className="mt-5 rounded-xl border border-white/10 bg-[#121A2B] p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#6C9EFF]/12 px-3 py-1 text-xs font-semibold text-[#6C9EFF]">
-            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-            {active.yearLabel}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#6C9EFF]/12 px-3 py-1 text-xs font-semibold text-[#6C9EFF]">
+              <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+              {active.yearLabel}
+            </span>
+            {uncertain && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-amber-300">
+                <AlertTriangle className="h-3 w-3" />
+                Approximate / Date Range
+              </span>
+            )}
+          </div>
           {active.associatedRecord && (
             <span className="inline-flex items-center gap-1.5 text-xs text-[#E5B66A]">
               <FileText className="h-3.5 w-3.5" aria-hidden="true" />

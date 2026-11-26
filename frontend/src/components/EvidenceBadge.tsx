@@ -29,20 +29,20 @@ export function EvidenceBadge({
     <div className="inline-flex flex-col gap-1.5">
       <span
         title={meta.description}
-        className={`inline-flex items-center gap-1.5 rounded-full border font-semibold tracking-wider uppercase ${
+        className={`font-mono-archive inline-flex items-center gap-1.5 rounded-md border font-semibold tracking-wider uppercase ${
           meta.colorClass
-        } ${size === 'sm' ? 'px-2.5 py-0.5 text-[11px]' : 'px-3.5 py-1 text-xs'}`}
+        } ${size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-[11px]'}`}
       >
         <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5'} aria-hidden="true" />
         <span>{meta.label}</span>
         {showPlainLabel && (
-          <span className="font-normal normal-case tracking-normal opacity-90">
+          <span className="font-ui font-normal normal-case tracking-normal opacity-90">
             · {meta.plainLabel}
           </span>
         )}
       </span>
       {showDescription && (
-        <p className="text-sm text-[#CBD6F0] leading-relaxed">{meta.description}</p>
+        <p className="text-sm text-[#CBD5E1] leading-relaxed">{meta.description}</p>
       )}
     </div>
   );
